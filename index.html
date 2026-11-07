@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Photo Gallery</title>
+<meta name="description" content="Personal photo gallery">
+<style>
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0f0f0f;
+  --surface:   #1a1a1a;
+  --surface2:  #242424;
+  --border:    #2e2e2e;
+  --text:      #e8e8e8;
+  --muted:     #888;
+  --accent:    #c9a84c;
+  --accent2:   #e8c97a;
+  --radius:    10px;
+  --sidebar-w: 260px;
+  --header-h:  60px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: rgba(15,15,15,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 100;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: background 0.2s;
+}
+.menu-btn:hover { background: var(--surface2); }
+.menu-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.header-title {
+  flex: 1;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--accent2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-stats {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+.layout {
+  display: flex;
+  margin-top: var(--header-h);
+  min-height: calc(100vh - var(--header-h));
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index: 90;
+  padding: 12px 0;
+}
+
+.sidebar.closed { transform: translateX(calc(-1 * var(--sidebar-w))); }
+
+.sidebar-heading {
+  padding: 10px 18px 6px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.album-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  border-left: 3px solid transparent;
+  font-size: 0.88rem;
+}
+
+.album-btn:hover { background: var(--surface2); }
+
+.album-btn.active {
+  background: rgba(201,168,76,0.08);
+  border-left-color: var(--accent);
+  color: var(--accent2);
+}
+
+.album-btn .album-cover {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+
+.album-btn .album-cover-placeholder {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.album-info { overflow: hidden; }
+.album-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.album-count { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+/* ── Main content ─────────────────────────────────────────── */
+.main {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1);
+  padding: 24px;
+}
+
+.main.sidebar-closed { margin-left: 0; }
+
+/* ── Album view ───────────────────────────────────────────── */
+.album-view { display: none; }
+.album-view.active { display: block; }
+
+.album-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.album-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.album-meta {
+  font-size: 0.82rem;
+  color: var(--muted);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ── Photo grid ───────────────────────────────────────────── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.photo-card {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface);
+  aspect-ratio: 4/3;
+  group: true;
+}
+
+.photo-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 0.2s;
+}
+
+.photo-card:hover::after { background: rgba(0,0,0,0.25); }
+
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.photo-card:hover img { transform: scale(1.04); }
+
+.photo-card .caption-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 24px 10px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.9);
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.photo-card:hover .caption-overlay { opacity: 1; }
+
+/* ── Video section ────────────────────────────────────────── */
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.video-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.video-card video {
+  width: 100%;
+  display: block;
+  max-height: 240px;
+  background: #000;
+}
+
+.video-card .video-caption {
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Lightbox ─────────────────────────────────────────────── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.lightbox.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.lightbox-img-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: calc(100vw - 120px);
+  max-height: calc(100vh - 100px);
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: calc(100vh - 100px);
+  border-radius: 6px;
+  object-fit: contain;
+  box-shadow: 0 8px 60px rgba(0,0,0,0.6);
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.lightbox-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: background 0.2s;
+  z-index: 1001;
+}
+
+.lightbox-btn:hover { background: rgba(255,255,255,0.18); }
+.lightbox-btn.prev { left: 16px; }
+.lightbox-btn.next { right: 16px; }
+
+.lightbox-close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+  z-index: 1001;
+}
+
+.lightbox-close:hover { background: rgba(255,255,255,0.2); }
+
+.lightbox-info {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 60px;
+  text-align: center;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  z-index: 1001;
+}
+
+.lightbox-caption {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 4px;
+}
+
+.lightbox-counter {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.empty-state .icon { font-size: 3rem; }
+
+/* ── Overlay backdrop (mobile sidebar) ───────────────────── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 85;
+  top: var(--header-h);
+}
+
+/* ── Scrollbar styling ────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 240px; }
+
+  .sidebar {
+    transform: translateX(calc(-1 * var(--sidebar-w)));
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+  }
+
+  .sidebar.open { transform: translateX(0); }
+
+  .main { margin-left: 0 !important; padding: 16px; }
+
+  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+
+  .lightbox-img-wrap { max-width: 100vw; }
+  .lightbox-btn { display: none; }
+
+  .sidebar-overlay { display: block; }
+  .sidebar-overlay.active { display: block; }
+  .sidebar-overlay:not(.active) { display: none; }
+}
+
+@media (max-width: 480px) {
+  .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .header-stats { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────── -->
+<header>
+  <button class="menu-btn" id="menuBtn" title="Toggle albums" aria-label="Toggle sidebar">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="header-title" id="galleryTitle">My Photo Gallery</div>
+  <div class="header-stats" id="headerStats"></div>
+</header>
+
+<!-- ── LAYOUT ──────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-heading">Albums</div>
+    <div id="albumNav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main content -->
+  <main class="main" id="main">
+    <div id="albumViews"></div>
+  </main>
+
+</div>
+
+<!-- ── LIGHTBOX ────────────────────────────────────────────────────── -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <button class="lightbox-close" id="lbClose" title="Close (Esc)">✕</button>
+  <button class="lightbox-btn prev" id="lbPrev" title="Previous (←)">&#8592;</button>
+  <div class="lightbox-img-wrap">
+    <img id="lbImg" src="" alt="" draggable="false">
+  </div>
+  <button class="lightbox-btn next" id="lbNext" title="Next (→)">&#8594;</button>
+  <div class="lightbox-info">
+    <div class="lightbox-caption" id="lbCaption"></div>
+    <div class="lightbox-counter" id="lbCounter"></div>
+  </div>
+</div>
+
+<script>
+// ── Load gallery data ────────────────────────────────────────────────
+let GALLERY = null;
+let currentAlbumId = null;
+let lightboxPhotos = [];
+let lightboxIndex  = 0;
+
+async function loadGallery() {
+  try {
+    const res = await fetch('gallery.json?v=' + Date.now());
+    GALLERY = await res.json();
+    renderGallery();
+  } catch (e) {
+    document.getElementById('main').innerHTML =
+      '<div class="empty-state"><div class="icon">📷</div><p>No gallery data found.</p><p style="font-size:0.8rem">Run <code>python process.py --source ...</code> to build the gallery.</p></div>';
+  }
+}
+
+// ── Render sidebar + all album views ─────────────────────────────────
+function renderGallery() {
+  const g = GALLERY;
+  document.title = g.title || 'Photo Gallery';
+  document.getElementById('galleryTitle').textContent = g.title || 'My Photo Gallery';
+  document.getElementById('headerStats').textContent =
+    `${g.total_photos} photos · ${g.total_videos} videos · ${g.albums.length} albums`;
+
+  const nav   = document.getElementById('albumNav');
+  const views = document.getElementById('albumViews');
+
+  g.albums.forEach((alb, ai) => {
+    // Sidebar button
+    const btn = document.createElement('button');
+    btn.className = 'album-btn';
+    btn.dataset.albumId = alb.id;
+
+    const coverEl = alb.cover
+      ? `<img class="album-cover" src="${alb.cover}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="album-cover-placeholder">📂</div>`;
+
+    btn.innerHTML = `
+      ${coverEl}
+      <div class="album-info">
+        <div class="album-name">${escHtml(alb.name)}</div>
+        <div class="album-count">${alb.photo_count} photos · ${alb.video_count} videos</div>
+      </div>`;
+    btn.addEventListener('click', () => showAlbum(alb.id));
+    nav.appendChild(btn);
+
+    // Album view
+    const view = document.createElement('div');
+    view.className = 'album-view';
+    view.id = 'alb-' + alb.id;
+
+    // Photos grid
+    let photosHtml = '';
+    if (alb.photos.length) {
+      photosHtml = `
+        <div class="section-label">Photos</div>
+        <div class="photo-grid" data-album="${alb.id}">
+          ${alb.photos.map((ph, pi) => `
+            <div class="photo-card"
+                 data-album="${alb.id}"
+                 data-index="${pi}"
+                 tabindex="0"
+                 role="button"
+                 aria-label="${escHtml(ph.caption)}">
+              <img src="${ph.thumb}"
+                   alt="${escHtml(ph.caption)}"
+                   loading="lazy"
+                   onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'150\\'><rect fill=\\'%23222\\'/><text fill=\\'%23555\\' x=\\'50%\\' y=\\'50%\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>?</text></svg>'">
+              <div class="caption-overlay">${escHtml(ph.caption)}</div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    // Videos grid
+    let videosHtml = '';
+    if (alb.videos.length) {
+      videosHtml = `
+        <div class="section-label">Videos</div>
+        <div class="video-grid">
+          ${alb.videos.map(v => `
+            <div class="video-card">
+              <video controls preload="metadata" loading="lazy">
+                <source src="${v.src}" type="video/mp4">
+              </video>
+              <div class="video-caption">🎬 ${escHtml(v.caption)}</div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    view.innerHTML = `
+      <div class="album-header">
+        <div class="album-title">${escHtml(alb.name)}</div>
+        <div class="album-meta">
+          <span>📅 ${alb.date}</span>
+          <span>🖼️ ${alb.photo_count} photos</span>
+          ${alb.video_count ? `<span>🎬 ${alb.video_count} videos</span>` : ''}
+        </div>
+      </div>
+      ${alb.photos.length === 0 && alb.videos.length === 0
+        ? '<div class="empty-state"><div class="icon">📂</div><p>No media in this album.</p></div>'
+        : photosHtml + videosHtml}`;
+
+    views.appendChild(view);
+  });
+
+  // Click handlers for photo cards
+  views.addEventListener('click', e => {
+    const card = e.target.closest('.photo-card');
+    if (card) openLightbox(card.dataset.album, parseInt(card.dataset.index));
+  });
+  views.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const card = e.target.closest('.photo-card');
+      if (card) openLightbox(card.dataset.album, parseInt(card.dataset.index));
+    }
+  });
+
+  // Show first album
+  if (g.albums.length) showAlbum(g.albums[0].id);
+}
+
+// ── Show album ────────────────────────────────────────────────────────
+function showAlbum(id) {
+  document.querySelectorAll('.album-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.album-btn').forEach(b => b.classList.remove('active'));
+
+  const view = document.getElementById('alb-' + id);
+  if (view) view.classList.add('active');
+
+  const btn = document.querySelector(`.album-btn[data-album-id="${id}"]`);
+  if (btn) {
+    btn.classList.add('active');
+    btn.scrollIntoView({ block: 'nearest' });
+  }
+
+  currentAlbumId = id;
+
+  // On mobile, close sidebar after selection
+  if (window.innerWidth <= 768) closeSidebar();
+}
+
+// ── Sidebar toggle ────────────────────────────────────────────────────
+const sidebar  = document.getElementById('sidebar');
+const overlay  = document.getElementById('sidebarOverlay');
+const mainEl   = document.getElementById('main');
+const menuBtn  = document.getElementById('menuBtn');
+let sidebarOpen = window.innerWidth > 768;
+
+function openSidebar() {
+  sidebarOpen = true;
+  sidebar.classList.remove('closed');
+  if (window.innerWidth > 768) {
+    mainEl.classList.remove('sidebar-closed');
+  } else {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+  }
+}
+
+function closeSidebar() {
+  sidebarOpen = false;
+  if (window.innerWidth > 768) {
+    sidebar.classList.add('closed');
+    mainEl.classList.add('sidebar-closed');
+  } else {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }
+}
+
+menuBtn.addEventListener('click', () => sidebarOpen ? closeSidebar() : openSidebar());
+overlay.addEventListener('click', closeSidebar);
+
+// ── Lightbox ──────────────────────────────────────────────────────────
+const lb       = document.getElementById('lightbox');
+const lbImg    = document.getElementById('lbImg');
+const lbCap    = document.getElementById('lbCaption');
+const lbCtr    = document.getElementById('lbCounter');
+const lbClose  = document.getElementById('lbClose');
+const lbPrev   = document.getElementById('lbPrev');
+const lbNext   = document.getElementById('lbNext');
+
+function openLightbox(albumId, index) {
+  const alb = GALLERY.albums.find(a => a.id === albumId);
+  if (!alb) return;
+  lightboxPhotos = alb.photos;
+  lightboxIndex  = index;
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  showLbPhoto();
+}
+
+function showLbPhoto() {
+  const ph = lightboxPhotos[lightboxIndex];
+  if (!ph) return;
+  lbImg.style.opacity = '0';
+  lbImg.onload = () => { lbImg.style.opacity = '1'; };
+  lbImg.src     = ph.original;
+  lbImg.alt     = ph.caption;
+  lbCap.textContent = ph.caption;
+  lbCtr.textContent = `${lightboxIndex + 1} / ${lightboxPhotos.length}`;
+}
+
+function closeLightbox() {
+  lb.classList.remove('open');
+  document.body.style.overflow = '';
+  lbImg.src = '';
+}
+
+function lbNavigate(dir) {
+  lightboxIndex = (lightboxIndex + dir + lightboxPhotos.length) % lightboxPhotos.length;
+  showLbPhoto();
+}
+
+lbClose.addEventListener('click', closeLightbox);
+lbPrev.addEventListener('click', () => lbNavigate(-1));
+lbNext.addEventListener('click', () => lbNavigate(1));
+lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+
+// Touch/swipe support
+let touchStartX = 0;
+lb.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+lb.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) lbNavigate(dx > 0 ? -1 : 1);
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'ArrowLeft')  lbNavigate(-1);
+  if (e.key === 'ArrowRight') lbNavigate(1);
+  if (e.key === 'Escape')     closeLightbox();
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadGallery();
+</script>
+</body>
+</html>
