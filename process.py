@@ -396,6 +396,24 @@ def run(source_dir: Path, title: str, remove_names: list[str]):
 
 
 # ── README generator ──────────────────────────────────────────────────────────
+def get_pages_url() -> str:
+    """Derive GitHub Pages URL dynamically from git remote origin."""
+    try:
+        import subprocess
+        res = subprocess.check_output(
+            ["git", "config", "--get", "remote.origin.url"],
+            cwd=str(PROJECT_DIR),
+            text=True
+        ).strip()
+        m = re.search(r'github\.com[:/]([^/]+)/([^/\.]+)', res)
+        if m:
+            user, repo = m.group(1), m.group(2)
+            return f"https://{user}.github.io/{repo}/"
+    except Exception:
+        pass
+    return "https://kammala-kalyan.github.io/Gallary/"
+
+
 def generate_readme(gallery: dict):
     title    = gallery["title"]
     total_p  = gallery["total_photos"]
@@ -403,8 +421,7 @@ def generate_readme(gallery: dict):
     albums   = gallery["albums"]
     gen_date = gallery["generated"][:10]
 
-    # GitHub Pages URL (derived from known repo)
-    pages_url = "https://vijayalakshmi-kammala.github.io/Gallary/"
+    pages_url = get_pages_url()
 
     lines = [
         f"# 📸 {title}",
