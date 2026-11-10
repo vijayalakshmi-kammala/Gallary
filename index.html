@@ -524,12 +524,31 @@ let lightboxIndex  = 0;
 
 async function loadGallery() {
   try {
-    const res = await fetch('gallery.json?v=' + Date.now());
+    // Check if token exists in localStorage or URL query param for devices with cookie restrictions
+    var token = '';
+    try { token = localStorage.getItem('gallery_auth_token') || ''; } catch(e) {}
+    if (!token) {
+      var urlParams = new URLSearchParams(window.location.search);
+      token = urlParams.get('auth') || '';
+      if (token) {
+        try { localStorage.setItem('gallery_auth_token', token); } catch(e) {}
+      }
+    }
+
+    var fetchUrl = 'gallery.json?v=' + Date.now();
+    if (token) {
+      fetchUrl += '&auth=' + encodeURIComponent(token);
+    }
+
+    const res = await fetch(fetchUrl, { credentials: 'include' });
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    }
     GALLERY = await res.json();
     renderGallery();
   } catch (e) {
     document.getElementById('main').innerHTML =
-      '<div class="empty-state"><div class="icon">📷</div><p>No gallery data found.</p><p style="font-size:0.8rem">Run <code>python process.py --source ...</code> to build the gallery.</p></div>';
+      '<div class="empty-state"><div class="icon">📷</div><p>Failed to load gallery data.</p><p style="font-size:0.8rem">' + e.message + '</p></div>';
   }
 }
 
