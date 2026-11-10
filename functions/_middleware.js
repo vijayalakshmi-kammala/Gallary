@@ -1,8 +1,8 @@
 // Cloudflare Pages Functions - True Edge Server-Side Authentication
 // Intercepts EVERY request (HTML, JSON, Images, Videos) before serving bytes.
 
-const AUTH_USER = "9491991223";
-const AUTH_PASS = "k,9491991223";
+const AUTH_USER = "9701994529";
+const AUTH_PASS = "k,9701994529";
 // Secret key used to sign the session cookie (HMAC SHA-256)
 const SECRET_KEY = "kammala_photo_gallery_secure_edge_secret_token_2026";
 const COOKIE_NAME = "gallery_auth_token";
@@ -24,10 +24,12 @@ async function hmacSha256(message, secret) {
 
 function getCookie(request, name) {
   const cookieHeader = request.headers.get("Cookie") || "";
-  const cookies = cookieHeader.split(";").map(c => c.trim());
-  for (const cookie of cookies) {
-    const [k, v] = cookie.split("=");
-    if (k === name) return v;
+  const cookies = cookieHeader.split(";");
+  for (const c of cookies) {
+    const trimmed = c.trim();
+    if (trimmed.startsWith(name + "=")) {
+      return trimmed.substring(name.length + 1);
+    }
   }
   return null;
 }
@@ -37,27 +39,29 @@ function loginPageHtml(errorMsg = "") {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Protected Photo Gallery - Login</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background: #0d0d0d;
     color: #e0e0e0;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
+    -webkit-font-smoothing: antialiased;
   }
   .login-card {
     background: #1a1a1a;
     border: 1px solid #2d2d2d;
-    border-radius: 12px;
-    padding: 36px 32px;
+    border-radius: 16px;
+    padding: 32px 24px;
     width: 100%;
-    max-width: 380px;
+    max-width: 360px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   }
   .icon-wrap {
@@ -92,14 +96,15 @@ function loginPageHtml(errorMsg = "") {
   }
   input[type="text"], input[type="password"] {
     width: 100%;
-    padding: 12px 14px;
+    padding: 14px 14px;
     background: #242424;
-    border: 1px solid #333;
-    border-radius: 8px;
+    border: 1px solid #383838;
+    border-radius: 10px;
     color: #fff;
-    font-size: 0.95rem;
+    font-size: 16px; /* 16px prevents iOS auto-zoom on input focus */
     outline: none;
     transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
   }
   input[type="text"]:focus, input[type="password"]:focus {
     border-color: #c9a84c;
@@ -107,26 +112,27 @@ function loginPageHtml(errorMsg = "") {
   }
   .btn {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     background: #c9a84c;
     color: #111;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     margin-top: 8px;
     transition: background 0.2s, transform 0.1s;
+    -webkit-appearance: none;
   }
   .btn:hover { background: #dfbc55; }
-  .btn:active { transform: scale(0.99); }
+  .btn:active { transform: scale(0.98); }
   .error-box {
-    background: rgba(220, 53, 69, 0.15);
-    border: 1px solid rgba(220, 53, 69, 0.4);
+    background: rgba(220, 53, 69, 0.18);
+    border: 1px solid rgba(220, 53, 69, 0.5);
     color: #ff6b6b;
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 0.82rem;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
     margin-bottom: 18px;
     text-align: center;
   }
@@ -142,18 +148,18 @@ function loginPageHtml(errorMsg = "") {
   <div class="login-card">
     <div class="icon-wrap">🔒</div>
     <h1>Private Gallery</h1>
-    <p class="subtitle">Server authentication required</p>
+    <p class="subtitle">Enter credentials to unlock</p>
 
     ${errorMsg ? `<div class="error-box">${errorMsg}</div>` : ""}
 
     <form method="POST" action="/__login">
       <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" required autocomplete="username" autofocus>
+        <input type="text" id="username" name="username" required autocomplete="username" inputmode="numeric" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
+        <input type="password" id="password" name="password" required autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
       </div>
       <button type="submit" class="btn">Unlock Gallery</button>
     </form>
@@ -170,7 +176,7 @@ export async function onRequest(context) {
   // 1. Handle Logout request
   if (url.pathname === "/__logout") {
     return new Response(null, {
-      status: 302,
+      status: 303,
       headers: {
         Location: "/",
         "Set-Cookie": `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
@@ -192,9 +198,9 @@ export async function onRequest(context) {
         const signature = await hmacSha256(payload, SECRET_KEY);
         const token = `${payload}:${signature}`;
 
-        // Return 302 redirect with HttpOnly session cookie
+        // Return 303 redirect with HttpOnly session cookie (HTTP 303 See Other is universally followed by mobile browsers)
         return new Response(null, {
-          status: 302,
+          status: 303,
           headers: {
             Location: "/",
             "Set-Cookie": `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000` // 30 days
@@ -202,13 +208,13 @@ export async function onRequest(context) {
         });
       } else {
         // Invalid credentials -> Re-render login page with error
-        return new Response(loginPageHtml("Invalid username or password."), {
+        return new Response(loginPageHtml("Invalid username or password. Please try again."), {
           status: 401,
           headers: { "Content-Type": "text/html; charset=utf-8" }
         });
       }
     } catch (e) {
-      return new Response(loginPageHtml("An error occurred during authentication."), {
+      return new Response(loginPageHtml("An error occurred during authentication. Please retry."), {
         status: 400,
         headers: { "Content-Type": "text/html; charset=utf-8" }
       });
