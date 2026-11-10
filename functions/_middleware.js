@@ -1,9 +1,8 @@
 // Cloudflare Pages Functions - True Edge Server-Side Authentication
-// Intercepts EVERY request (HTML, JSON, Images, Videos) before serving bytes.
+// Compatible with all mobile devices including Samsung Internet & legacy WebViews.
 
 const AUTH_USER = "9701994529";
 const AUTH_PASS = "k,9701994529";
-// Secret key used to sign the session cookie (HMAC SHA-256)
 const SECRET_KEY = "kammala_photo_gallery_secure_edge_secret_token_2026";
 const COOKIE_NAME = "gallery_auth_token";
 
@@ -40,20 +39,21 @@ function loginPageHtml(errorMsg = "") {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Protected Photo Gallery - Login</title>
+<title>Private Photo Gallery</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  html, body {
+    height: 100%;
     background: #0d0d0d;
     color: #e0e0e0;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
-    -webkit-font-smoothing: antialiased;
   }
   .login-card {
     background: #1a1a1a;
@@ -96,12 +96,12 @@ function loginPageHtml(errorMsg = "") {
   }
   input[type="text"], input[type="password"] {
     width: 100%;
-    padding: 14px 14px;
+    padding: 14px;
     background: #242424;
     border: 1px solid #383838;
     border-radius: 10px;
     color: #fff;
-    font-size: 16px; /* Prevents auto-zoom on iOS */
+    font-size: 16px;
     outline: none;
     transition: border-color 0.2s, background 0.2s;
     -webkit-appearance: none;
@@ -169,47 +169,72 @@ function loginPageHtml(errorMsg = "") {
   </div>
 
   <script>
-    const form = document.getElementById('loginForm');
-    const btn = document.getElementById('submitBtn');
-    const errBox = document.getElementById('errBox');
+    // Check if token already exists in localStorage (e.g. if cookies were dropped by browser)
+    try {
+      var savedToken = localStorage.getItem('gallery_auth_token');
+      if (savedToken && !window.location.search.includes('logout')) {
+        document.cookie = 'gallery_auth_token=' + savedToken + '; Path=/; Secure; SameSite=None; Max-Age=2592000';
+      }
+    } catch(e) {}
 
-    form.addEventListener('submit', async function(e) {
+    var form = document.getElementById('loginForm');
+    var btn = document.getElementById('submitBtn');
+    var errBox = document.getElementById('errBox');
+
+    form.addEventListener('submit', function(e) {
       e.preventDefault();
       btn.disabled = true;
       btn.textContent = 'Verifying...';
       errBox.style.display = 'none';
 
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
+      // Robust trimming: handles Samsung keyboard zero-width spaces or stray spaces
+      var user = document.getElementById('username').value.replace(/\\s+/g, '').trim();
+      var pass = document.getElementById('password').value.trim();
 
-      const body = new URLSearchParams();
+      var body = new URLSearchParams();
       body.append('username', user);
       body.append('password', pass);
 
-      try {
-        const res = await fetch('/__login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString(),
-          credentials: 'include'
-        });
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/__login', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.withCredentials = true;
 
-        const data = await res.json().catch(() => null);
-
-        if (res.ok && data && data.success) {
-          btn.textContent = 'Unlocked! Loading...';
-          // Force mobile browser to reload bypassing cache
-          window.location.href = '/?t=' + Date.now();
-        } else {
-          errBox.textContent = (data && data.error) ? data.error : 'Invalid username or password.';
+      xhr.onload = function() {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (xhr.status === 200 && data && data.success) {
+            btn.textContent = 'Unlocked! Loading...';
+            // Save token to localStorage as backup for Samsung Internet
+            if (data.token) {
+              try { localStorage.setItem('gallery_auth_token', data.token); } catch(err) {}
+              // Also explicitly write cookie in document
+              document.cookie = 'gallery_auth_token=' + data.token + '; Path=/; Secure; SameSite=None; Max-Age=2592000';
+            }
+            // Navigate with token param backup
+            setTimeout(function() {
+              window.location.replace('/?auth=' + encodeURIComponent(data.token || '') + '&t=' + Date.now());
+            }, 100);
+          } else {
+            errBox.textContent = (data && data.error) ? data.error : 'Invalid username or password.';
+            errBox.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Unlock Gallery';
+          }
+        } catch(ex) {
+          errBox.textContent = 'Response error: ' + xhr.responseText;
           errBox.style.display = 'block';
           btn.disabled = false;
           btn.textContent = 'Unlock Gallery';
         }
-      } catch (err) {
-        // Fallback to standard form submission if fetch is blocked
+      };
+
+      xhr.onerror = function() {
+        // Fallback to native form POST if XMLHttpRequest fails
         form.submit();
-      }
+      };
+
+      xhr.send(body.toString());
     });
   </script>
 </body>
@@ -220,47 +245,40 @@ export async function onRequest(context) {
   const { request, next } = context;
   const url = new URL(request.url);
 
-  // 1. Handle Logout request
+  // 1. Handle Logout
   if (url.pathname === "/__logout") {
     return new Response(null, {
       status: 303,
       headers: {
         Location: "/",
-        "Set-Cookie": `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
+        "Set-Cookie": `${COOKIE_NAME}=; Path=/; Secure; SameSite=None; Max-Age=0`
       }
     });
   }
 
-  // 2. Handle Login Submission POST /__login
+  // 2. Handle Login Submission
   if (url.pathname === "/__login" && request.method === "POST") {
     try {
-      const contentType = request.headers.get("content-type") || "";
-      let username = "";
-      let password = "";
-
-      if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
-        const formData = await request.formData();
-        username = (formData.get("username") || "").trim();
-        password = (formData.get("password") || "").trim();
-      }
+      const formData = await request.formData();
+      // Strip any accidental spaces from phone input
+      const username = (formData.get("username") || "").replace(/\s+/g, "").trim();
+      const password = (formData.get("password") || "").trim();
 
       if (username === AUTH_USER && password === AUTH_PASS) {
-        // Valid credentials -> Generate server-signed HMAC token
         const timestamp = Date.now().toString();
         const payload = `${username}:${timestamp}`;
         const signature = await hmacSha256(payload, SECRET_KEY);
         const token = `${payload}:${signature}`;
 
-        // Return JSON success with cookie for modern mobile/desktop browsers
-        return new Response(JSON.stringify({ success: true }), {
+        // Return token both in cookie and in JSON payload for Samsung browsers
+        return new Response(JSON.stringify({ success: true, token }), {
           status: 200,
           headers: {
             "Content-Type": "application/json",
-            "Set-Cookie": `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000` // 30 days
+            "Set-Cookie": `${COOKIE_NAME}=${token}; Path=/; Secure; SameSite=None; Max-Age=2592000`
           }
         });
       } else {
-        // Invalid credentials
         return new Response(JSON.stringify({ success: false, error: "Invalid username or password." }), {
           status: 401,
           headers: { "Content-Type": "application/json" }
@@ -274,22 +292,32 @@ export async function onRequest(context) {
     }
   }
 
-  // 3. Verify Server Session Cookie on EVERY request (including images/videos/JSON)
-  const token = getCookie(request, COOKIE_NAME);
+  // 3. Verify Server Session: Check Cookie OR Query Parameter ?auth= (for Samsung devices that block cookies)
+  let token = getCookie(request, COOKIE_NAME);
+  if (!token) {
+    token = url.searchParams.get("auth");
+  }
+
   if (token) {
     const parts = token.split(":");
     if (parts.length === 3) {
       const [u, ts, clientSig] = parts;
       const expectedSig = await hmacSha256(`${u}:${ts}`, SECRET_KEY);
       if (u === AUTH_USER && clientSig === expectedSig) {
-        // Valid server session verified! Forward request to serve file/page.
-        return next();
+        // Authenticated! If auth came via URL param, re-stamp the cookie
+        const response = await next();
+        const newHeaders = new Headers(response.headers);
+        newHeaders.append("Set-Cookie", `${COOKIE_NAME}=${token}; Path=/; Secure; SameSite=None; Max-Age=2592000`);
+        return new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: newHeaders
+        });
       }
     }
   }
 
-  // 4. If not authenticated:
-  // For API/Asset requests (e.g. photos/videos/gallery.json direct downloads), block with 401
+  // 4. Block asset downloads if unauthenticated
   if (url.pathname.startsWith("/photos/") || url.pathname.startsWith("/videos/") || url.pathname.endsWith(".json")) {
     return new Response(JSON.stringify({ error: "Unauthorized access" }), {
       status: 401,
@@ -297,7 +325,7 @@ export async function onRequest(context) {
     });
   }
 
-  // For browser page requests, show the Login Page
+  // 5. Unauthenticated page view -> Show Login Page
   return new Response(loginPageHtml(), {
     status: 401,
     headers: {
