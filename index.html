@@ -552,6 +552,24 @@ async function loadGallery() {
   }
 }
 
+// Global auth token helper
+function getAuthToken() {
+  var t = '';
+  try { t = localStorage.getItem('gallery_auth_token') || ''; } catch(e) {}
+  if (!t) {
+    var p = new URLSearchParams(window.location.search);
+    t = p.get('auth') || '';
+  }
+  return t;
+}
+
+function authUrl(path) {
+  if (!path) return '';
+  var t = getAuthToken();
+  if (!t) return path;
+  return path + (path.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(t);
+}
+
 // ── Render sidebar + all album views ─────────────────────────────────
 function renderGallery() {
   const g = GALLERY;
@@ -569,8 +587,9 @@ function renderGallery() {
     btn.className = 'album-btn';
     btn.dataset.albumId = alb.id;
 
-    const coverEl = alb.cover
-      ? `<img class="album-cover" src="${alb.cover}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    const coverSrc = authUrl(alb.cover);
+    const coverEl = coverSrc
+      ? `<img class="album-cover" src="${coverSrc}" alt="" loading="lazy" onerror="this.style.display='none'">`
       : `<div class="album-cover-placeholder">📂</div>`;
 
     btn.innerHTML = `
@@ -600,7 +619,7 @@ function renderGallery() {
                  tabindex="0"
                  role="button"
                  aria-label="${escHtml(ph.caption)}">
-              <img src="${ph.thumb}"
+              <img src="${authUrl(ph.thumb)}"
                    alt="${escHtml(ph.caption)}"
                    loading="lazy"
                    onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'150\\'><rect fill=\\'%23222\\'/><text fill=\\'%23555\\' x=\\'50%\\' y=\\'50%\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>?</text></svg>'">
@@ -618,7 +637,7 @@ function renderGallery() {
           ${alb.videos.map(v => `
             <div class="video-card">
               <video controls preload="metadata" loading="lazy">
-                <source src="${v.src}" type="video/mp4">
+                <source src="${authUrl(v.src)}" type="video/mp4">
               </video>
               <div class="video-caption">🎬 ${escHtml(v.caption)}</div>
             </div>`).join('')}
@@ -733,7 +752,7 @@ function showLbPhoto() {
   if (!ph) return;
   lbImg.style.opacity = '0';
   lbImg.onload = () => { lbImg.style.opacity = '1'; };
-  lbImg.src     = ph.original;
+  lbImg.src     = authUrl(ph.original);
   lbImg.alt     = ph.caption;
   lbCap.textContent = ph.caption;
   lbCtr.textContent = `${lightboxIndex + 1} / ${lightboxPhotos.length}`;
