@@ -101,7 +101,7 @@ function loginPageHtml(errorMsg = "") {
     border: 1px solid #383838;
     border-radius: 10px;
     color: #fff;
-    font-size: 16px; /* 16px prevents iOS auto-zoom on input focus */
+    font-size: 16px; /* Prevents auto-zoom on iOS */
     outline: none;
     transition: border-color 0.2s, background 0.2s;
     -webkit-appearance: none;
@@ -126,6 +126,7 @@ function loginPageHtml(errorMsg = "") {
   }
   .btn:hover { background: #dfbc55; }
   .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .error-box {
     background: rgba(220, 53, 69, 0.18);
     border: 1px solid rgba(220, 53, 69, 0.5);
@@ -135,6 +136,7 @@ function loginPageHtml(errorMsg = "") {
     font-size: 0.85rem;
     margin-bottom: 18px;
     text-align: center;
+    display: ${errorMsg ? "block" : "none"};
   }
   .footer-note {
     font-size: 0.72rem;
@@ -150,9 +152,9 @@ function loginPageHtml(errorMsg = "") {
     <h1>Private Gallery</h1>
     <p class="subtitle">Enter credentials to unlock</p>
 
-    ${errorMsg ? `<div class="error-box">${errorMsg}</div>` : ""}
+    <div class="error-box" id="errBox">${errorMsg}</div>
 
-    <form method="POST" action="/__login">
+    <form id="loginForm" method="POST" action="/__login">
       <div class="form-group">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" required autocomplete="username" inputmode="numeric" autocapitalize="none" autocorrect="off" spellcheck="false" autofocus>
@@ -161,10 +163,55 @@ function loginPageHtml(errorMsg = "") {
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
       </div>
-      <button type="submit" class="btn">Unlock Gallery</button>
+      <button type="submit" class="btn" id="submitBtn">Unlock Gallery</button>
     </form>
     <div class="footer-note">Protected by Cloudflare Edge Security</div>
   </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const btn = document.getElementById('submitBtn');
+    const errBox = document.getElementById('errBox');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+      errBox.style.display = 'none';
+
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+
+      const body = new URLSearchParams();
+      body.append('username', user);
+      body.append('password', pass);
+
+      try {
+        const res = await fetch('/__login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+          credentials: 'include'
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && data && data.success) {
+          btn.textContent = 'Unlocked! Loading...';
+          // Force mobile browser to reload bypassing cache
+          window.location.href = '/?t=' + Date.now();
+        } else {
+          errBox.textContent = (data && data.error) ? data.error : 'Invalid username or password.';
+          errBox.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Unlock Gallery';
+        }
+      } catch (err) {
+        // Fallback to standard form submission if fetch is blocked
+        form.submit();
+      }
+    });
+  </script>
 </body>
 </html>`;
 }
@@ -187,9 +234,15 @@ export async function onRequest(context) {
   // 2. Handle Login Submission POST /__login
   if (url.pathname === "/__login" && request.method === "POST") {
     try {
-      const formData = await request.formData();
-      const username = (formData.get("username") || "").trim();
-      const password = (formData.get("password") || "").trim();
+      const contentType = request.headers.get("content-type") || "";
+      let username = "";
+      let password = "";
+
+      if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+        const formData = await request.formData();
+        username = (formData.get("username") || "").trim();
+        password = (formData.get("password") || "").trim();
+      }
 
       if (username === AUTH_USER && password === AUTH_PASS) {
         // Valid credentials -> Generate server-signed HMAC token
@@ -198,25 +251,25 @@ export async function onRequest(context) {
         const signature = await hmacSha256(payload, SECRET_KEY);
         const token = `${payload}:${signature}`;
 
-        // Return 303 redirect with HttpOnly session cookie (HTTP 303 See Other is universally followed by mobile browsers)
-        return new Response(null, {
-          status: 303,
+        // Return JSON success with cookie for modern mobile/desktop browsers
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
           headers: {
-            Location: "/",
+            "Content-Type": "application/json",
             "Set-Cookie": `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000` // 30 days
           }
         });
       } else {
-        // Invalid credentials -> Re-render login page with error
-        return new Response(loginPageHtml("Invalid username or password. Please try again."), {
+        // Invalid credentials
+        return new Response(JSON.stringify({ success: false, error: "Invalid username or password." }), {
           status: 401,
-          headers: { "Content-Type": "text/html; charset=utf-8" }
+          headers: { "Content-Type": "application/json" }
         });
       }
     } catch (e) {
-      return new Response(loginPageHtml("An error occurred during authentication. Please retry."), {
+      return new Response(JSON.stringify({ success: false, error: "Authentication error." }), {
         status: 400,
-        headers: { "Content-Type": "text/html; charset=utf-8" }
+        headers: { "Content-Type": "application/json" }
       });
     }
   }
@@ -247,6 +300,9 @@ export async function onRequest(context) {
   // For browser page requests, show the Login Page
   return new Response(loginPageHtml(), {
     status: 401,
-    headers: { "Content-Type": "text/html; charset=utf-8" }
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"
+    }
   });
 }
