@@ -1,8 +1,8 @@
 {
   "title": "My Photo Gallery",
-  "generated": "2026-11-10T12:56:25",
-  "total_photos": 141,
-  "total_videos": 12,
+  "generated": "2026-11-11T11:31:28",
+  "total_photos": 160,
+  "total_videos": 14,
   "albums": [
     {
       "id": "2026-10-17",
@@ -1246,6 +1246,180 @@
           "id": "WhatsApp_Video_2026-11-07_at_9.52.26_PM.mp4",
           "src": "videos/2026-11-07/WhatsApp_Video_2026-11-07_at_9.52.26_PM.mp4",
           "caption": "WhatsApp Video 2026-11-07 at 9.52.26 PM"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-10",
+      "name": "November 10, 2026",
+      "date": "2026-11-10",
+      "cover": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.23.17_PM.jpg",
+      "photo_count": 19,
+      "video_count": 2,
+      "photos": [
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_1.23.17_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_1.23.17_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.23.17_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 1.23.17 PM",
+          "width": 1129,
+          "height": 1600
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_1.24.02_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_1.24.02_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.24.02_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 1.24.02 PM",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_1.32.49_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_1.32.49_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.32.49_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 1.32.49 PM",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_1.36.47_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_1.36.47_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.36.47_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 1.36.47 PM",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_1.36.47_PM_1.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_1.36.47_PM_1.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.36.47_PM_1.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 1.36.47 PM 1",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_1.36.48_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_1.36.48_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_1.36.48_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 1.36.48 PM",
+          "width": 464,
+          "height": 1032
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.08_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.08_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.08_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.08 PM",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.08_PM_1.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.08_PM_1.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.08_PM_1.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.08 PM 1",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.08_PM_2.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.08_PM_2.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.08_PM_2.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.08 PM 2",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.09_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.09_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.09_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.09 PM",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.09_PM_1.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.09_PM_1.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.09_PM_1.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.09 PM 1",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.09_PM_2.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.09_PM_2.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.09_PM_2.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.09 PM 2",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.10_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.10_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.10_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.10 PM",
+          "width": 1280,
+          "height": 960
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.10_PM_1.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.10_PM_1.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.10_PM_1.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.10 PM 1",
+          "width": 1280,
+          "height": 960
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.10_PM_2.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.10_PM_2.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.10_PM_2.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.10 PM 2",
+          "width": 1280,
+          "height": 960
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.11_PM_1.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.11_PM_1.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.11_PM_1.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.11 PM 1",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.11_PM_2.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.11_PM_2.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.11_PM_2.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.11 PM 2",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_2.44.11_PM_3.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_2.44.11_PM_3.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_2.44.11_PM_3.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 2.44.11 PM 3",
+          "width": 960,
+          "height": 1280
+        },
+        {
+          "id": "WhatsApp_Image_2026-11-10_at_6.06.07_PM.jpg",
+          "original": "photos/2026-11-10/originals/WhatsApp_Image_2026-11-10_at_6.06.07_PM.jpg",
+          "thumb": "photos/2026-11-10/thumbs/WhatsApp_Image_2026-11-10_at_6.06.07_PM.jpg",
+          "caption": "WhatsApp Image 2026-11-10 at 6.06.07 PM",
+          "width": 1280,
+          "height": 854
+        }
+      ],
+      "videos": [
+        {
+          "id": "WhatsApp_Video_2026-11-10_at_2.43.39_PM.mp4",
+          "src": "videos/2026-11-10/WhatsApp_Video_2026-11-10_at_2.43.39_PM.mp4",
+          "caption": "WhatsApp Video 2026-11-10 at 2.43.39 PM"
+        },
+        {
+          "id": "WhatsApp_Video_2026-11-10_at_2.44.07_PM.mp4",
+          "src": "videos/2026-11-10/WhatsApp_Video_2026-11-10_at_2.44.07_PM.mp4",
+          "caption": "WhatsApp Video 2026-11-10 at 2.44.07 PM"
         }
       ]
     }
